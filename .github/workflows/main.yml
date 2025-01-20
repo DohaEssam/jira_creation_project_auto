@@ -1,43 +1,29 @@
-name: Python CI Pipeline
+name: CI Pipeline
 
-# Trigger workflow only on pushes to the main branch
 on:
   push:
     branches:
       - main
 
-# Define jobs to run in the pipeline
 jobs:
-  build-and-test:
-    name: Build and Test
-    runs-on: ubuntu-latest
-
+  install:
+    runs-on: ubuntu-latest  # or windows-latest depending on your environment
     steps:
-      # Step 1: Checkout the code
-      - name: Checkout Code
-        uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-      # Step 2: Set up Python environment
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v2
         with:
-          python-version: 3.9  # Specify the Python version
+          python-version: '3.8'  # specify the Python version used in your project
 
-      # Step 3: Install dependencies
-      - name: Install Dependencies
+      - name: Install dependencies
         run: |
-          if [[ "$RUNNING_ON_WINDOWS" == "true" ]]; then
-            pip install pywin32==308
+          # Skip installing pywin32 if not on Windows
+          if [ "$(uname)" == "Darwin" ] || [ "$(uname)" == "Linux" ]; then
+            pip install -r requirements.txt --no-deps
+          elif [ "$(uname)" == "MINGW32_NT" ] || [ "$(uname)" == "MINGW64_NT" ]; then
+            pip install -r requirements.txt
           fi
-          pip install -r requirements.txt
 
-      # Step 4: Run tests
-      - name: Run Tests
-        run: pytest --junitxml=test-results.xml
-
-      # Step 5: Upload test results (optional)
-      - name: Upload Test Results
-        uses: actions/upload-artifact@v3
-        with:
-          name: test-results
-          path: test-results.xml
+      # Optionally you can include additional steps like deployment, if required
